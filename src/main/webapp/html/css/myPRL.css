@@ -1,0 +1,8 @@
+body{background-image:url(../img/background.jpg); background-repeat:repeat-xy;}
+.t-n{color:red}
+.float-top{position:fixed; right:1%;top:50px;z-index:5555;}
+.t-v{color:green}
+.response-img {max-width: 100%;}
+.half-screen{max-width:80%;min-width:10%}
+.scrollable{overflow-y:auto;max-height:480px;}
+div .product-features{overflow-y:auto;max-width:400px}

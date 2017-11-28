@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<meta name="keywords" content="Price Reference,EC,NLP"/>
+	<meta name="author" content="betty352008@yeah.net"/>
+	<title>My Reference Line</title>
+<!--libs-->
+<script src="js/jquery.min.js"></script>
+<link rel="stylesheet" href="css/bootstrap.min.css"/>
+<link rel="stylesheet" href="css/myPRL.css"/>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/sortarray.js"></script>
+<script src="js/amcharts/amcharts.js"></script>
+<script src="js/amcharts/xy.js"></script>
+<!--libs-->
+</head>
+
+<header>
+<!--导航条从这里开始-->
+<nav class="navbar navbar-default .navbar-fixed-top">
+  <div class="container-fluid"><!--设置响应式栅格-->
+    <div class="navbar-header">
+	<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">&nbsp;&nbsp;◇◆Project MyPRL◆◇&nbsp;&nbsp;</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#">&nbsp;&nbsp;首页&nbsp;&nbsp; </a></li>
+        <li><a href="systemIntro.html"> 系统简介 </a></li>
+		<li><a href="dataBooking.html"> 数据预约 </a></li>
+        <li><a href="analysis.html"> 评论管理 </a></li>
+		<li><a href="author.html"> 关于作者 </a></li>
+      </ul>
+	
+      <form class="navbar-form navbar-right">
+		<div class="form-group">
+			<label for="search_keywords">按商品关键字搜索&nbsp;&nbsp;</label>
+			<input type="text" class="form-control" id="search_keywords" placeholder="关键字之间用空格隔开">
+		</div>
+        <button type="button" id="query_kw_b" class="btn btn-default">搜索</button>
+      </form>
+	  
+    </div><!-- /.navbar-collapse 响应式，在手机页面会缩起来-->
+  </div><!-- /.container-fluid 响应式栅格，到此结束-->
+</nav>
+<!--导航条在这里结束 navbar ends here-->
+
+</header>
+
+<body> <!--首页正文 main body-->
+<!--产品价格部分-->
+<div class="container-fluid" id="productPrice">
+	<p v-if="loading"><img src='img/loading.gif'/></p>
+	<div class='row panel panel-default' v-if="show" >
+		<div class="col-xs-10 panel-body">
+			<div id="chartdiv" style="width: 600px; height: 400px;"></div>
+		</div>
+		<div class='col-xs-2 panel-body' v-if="show">
+			<button class="btn btn-info" id="next_b" onclick="firstStep()">下一步</button>
+		</div>
+	</div><!--row 1, 第一行-->
+</div>
+<!--产品价格部分结束-->
+
+<div class="container-fluid" id="productDetail"  >
+	<div><p v-if="loading"><img src='img/loading.gif'/></p></div>
+	
+	<!--用户自定义产品特征-->
+	<div class='panel panel-default float-top half-screen' v-if="loading_finished">
+		<div class="panel-body">
+			<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#userInput">
+  				自动产品特征
+  			</button>
+			<div class="collapse pre-scrollable" id="userInput" style="max-height:480px" >
+  				<div style="height:95%">
+  				
+  				<div>选择下一步需要的特征，也请帮忙完善产品特征</div>
+  					<div v-for="f in features" class="product-features">
+  						<label>特征ID：{{f.topicID}} <input type="checkbox" v-bind:id="'use'+f.topicID" v-model="f.select"/></label><br/>
+  						<p>{{getAllTerms(f.terms)}}</p>
+  						<textarea v-model='f.add' placeholder="请用空格隔开希望去除的词"></textarea>
+  						<textarea v-model='f.del' placeholder="请用空格隔开希望添加的词"></textarea>
+  						<hr/>
+  					</div>
+  				</div>
+  				<button type="button" class="btn btn-primary" onclick="next_step()" id="next_step">下一步</button>
+			</div>
+		</div>
+	</div>
+
+	<!--产品及评论-->
+	<div class='row panel panel-default' v-for="p in product">
+		<div class="col-xs-4 panel-body">
+			<div v-if="!loading">
+				<p><img class="response-img" v-bind:src="imgBase1+(Math.ceil(Math.random()*3)+1)+imgBase2+p.image"/></p>
+				<p>{{p.title}}</p>
+				<p>价格： {{p.price}}元</p>	
+			</div>
+		</div>
+		
+		<div class="col-xs-8 panel-body">
+			<ul>
+				<li v-for="c in p.comments">
+				<span v-bind:class="'t-'+(term+'').split('/')[1]" v-for="term in c.t">{{(term+"").split("/")[0]}}</span>
+				</li>
+			</ul>
+		</div>
+	</div><!--row 1, 第一行-->
+
+</div><!--container/ main body-->
+	
+</body>
+<script>
+<!--给按关键词查询加事件，发送表单至servlet-->
+
+
+
+var app1=new Vue({
+el:"#productDetail",
+data:
+{
+	loading:false,
+	product:null,
+	imgBase1:"https://g-search",
+	imgBase2:".alicdn.com/img/",
+	termNatureFilter:true,
+	loading_finished:false,
+	features:null
+},
+methods:{
+	getAllKeys:function(arr)
+	{
+		var re="";
+		for(var key in arr)
+		{
+			re=re+key+",";
+		}
+		return re.substring(0,re.length-1);
+	},
+	getAllTerms:function(arr)
+	{
+		var re="";
+		for(var i=0;i<arr.length;i++)
+		{
+			re=re+arr[i].t+",";
+		}
+		return re.substring(0,re.length-1);
+	}
+	
+}
+});
+
+
+var productBasic=new Vue({
+el:"#productPrice",
+data:
+{
+	loading:false,
+	show:false,
+	product:null,
+	imgBase1:"https://g-search",
+	imgBase2:".alicdn.com/img/",
+	max:null,
+	min:null
+}
+});
+
+
+$('#query_kw_b').click(function(){
+  $.ajax({
+            type:"POST",
+            url:"../ProductBasic",
+            data:{searchedWords:$('#search_keywords').val()},
+            datatype: "json",
+            beforeSend:function(){
+			productBasic.loading=true;
+			app1.loading_finished=false;
+			},           
+            success:function(data,status){
+				productBasic.loading=false;
+				productBasic.show=true;
+				autoResize("chartdiv");
+				productBasic.product=sortArray(data.product,"price");
+				initChart();
+				//console.log(data.product);
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown){
+			alert(XMLHttpRequest.status);
+			alert(XMLHttpRequest.readyState);
+			alert(textStatus);
+            	//console.log("error");
+            }         
+         });
+  
+  setTimeout(function(){chart.write("chartdiv");},1000);
+  autoResize("chartdiv");
+});
+
+
+function autoResize(div)
+{
+	var h1=$(window).height()*0.8;
+	//var w1=$(window).width()*0.8;
+	var chartdiv=$('#'+div);
+	chartdiv.height(h1);
+	chartdiv.width('100%');
+}
+
+function initChart()
+{
+	//console.log("started");
+	chart = new AmCharts.AmXYChart();
+    chart.dataProvider = productBasic.product;
+
+    // AXES
+    var xAxis = new AmCharts.ValueAxis();
+    xAxis.title = "价格(元)/Price(￥)";
+    xAxis.position = "bottom";
+    xAxis.autoGridCount = true;
+    chart.addValueAxis(xAxis);
+
+    var yAxis = new AmCharts.ValueAxis();
+    yAxis.title = "销量/sales";
+    yAxis.position = "left";
+    yAxis.autoGridCount = true;
+    chart.addValueAxis(yAxis);
+
+    // GRAPH
+    var graph = new AmCharts.AmGraph();
+    graph.valueField = "value"; // valueField responsible for the size of a bullet
+    graph.xField = "price";
+    graph.yField = "sales";
+    graph.lineAlpha = 0;
+	graph.lineColor="#9BCD9B";
+    graph.bullet = "diamond";
+    graph.balloonText = "<img height='100px' width='100px' src='https://g-search1.alicdn.com/img/[[filename]]'></img>\
+    <br/>[[title]]<br/>价格:[[price]]/销量:[[sales]]";
+    chart.addGraph(graph);
+	//chart.write("chartdiv");
+	//console.log("ended");
+}
+
+//$('#next_b').click(
+function firstStep(){
+	productBasic.show=false;
+  $.ajax({
+            type:"POST",
+            url:"../ProductDetail",
+            data:{searchedWords:$('#search_keywords').val()},
+            datatype: "json",//"xml", "html", "script", "json", "jsonp", "text".
+            beforeSend:function(){
+			//showLoadingPic();
+			app1.loading=true;
+			},           
+            success:function(data,status){
+				//hideLoadingPic();
+				app1.loading=false;
+				app1.loading_finished=true;
+				//showProductDetail(data);
+				for(let i=0;i<data.length;i++)
+				{
+					let p=data[i];
+					let cs=p.comments;
+					for(let j=0;j<cs.length;j++)
+					{
+						let temp=cs[j].t+"";
+						let temp2=temp.split(",");
+						cs[j].t=temp2;
+					}
+				}
+				app1.product=data;
+				prepareTopics();
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown){
+			alert(XMLHttpRequest.status);
+			alert(XMLHttpRequest.readyState);
+			alert(textStatus);
+            	//console.log("error");
+            }         
+         });
+}//);
+
+
+
+function next_step()
+{
+	var topicUpdate=[];
+	var selectedTopics="";
+		//console.log(features);
+	for(let i=0;i<app1.features.length;i++)
+	{
+		let f=app1.features[i];
+		if(f.select)
+		{
+			if(i!=app1.features.length-1)
+			selectedTopics=selectedTopics+f.topicID+",";
+			else selectedTopics=selectedTopics+f.topicID;
+			let t={"id":f.topicID,"add":f.add,"del":f.del};
+			if(f.add!=""&&f.del!="")
+			topicUpdate.push(t);
+		}
+	}
+
+	var updated=false;
+	if(topicUpdate.length>0)
+	$.ajax({
+        type:"POST",
+        url:"../UpdateTopic",
+        data:{topic:JSON.stringify(topicUpdate)},
+        datatype: "json",//"xml", "html", "script", "json", "jsonp", "text".
+        beforeSend:function(){},           
+        success:function(data,status){
+			prepareTopics();
+			updated=true;
+			if(!confirm("还需要继续更正吗？"))
+				window.location.href = "./stepTwo.html?select="+selectedTopics+"&up="+updated+"&q="+$('#search_keywords').val();
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+		alert(XMLHttpRequest.status);
+		alert(XMLHttpRequest.readyState);
+		alert(textStatus);
+        	//console.log("error");
+        }         
+     });
+	else if(updated==false)
+	{
+		if(!confirm("确认不进行更正，直接进入下一步？"))
+		window.location.href = "./stepTwo.html?select="+selectedTopics+"&up="+updated+"&q="+$('#search_keywords').val();
+	}
+	else 
+	{
+		if(!confirm("还要继续更正吗?"))
+		window.location.href = "./stepTwo.html?select="+selectedTopics+"&up="+updated+"&q="+$('#search_keywords').val();
+	}
+
+}
+
+
+function prepareTopics()
+{
+	$.ajax({
+        type:"POST",
+        url:"../getTopics",
+        data:{searchedWords:$('#search_keywords').val()},
+        datatype: "json",
+        beforeSend:function(){		},           
+        success:function(data,status){
+			app1.features=data.topics;
+			for(let i=0;i<app1.features.length;i++)
+			{
+				app1.features[i].select=false;
+				app1.features[i].add="";
+				app1.features[i].del="";
+				app1.features[i].terms=sortTerms(app1.features[i].terms);
+			}
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+		alert(XMLHttpRequest.status);
+		alert(XMLHttpRequest.readyState);
+		alert(textStatus);
+        	//console.log("error");
+        }         
+     });
+
+}
+
+
+</script>
+</html>

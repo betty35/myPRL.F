@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<meta name="keywords" content="Price Reference,EC,NLP"/>
+	<meta name="author" content="betty352008@yeah.net"/>
+	<title>My Reference Line</title>
+<!--libs-->
+<script src="js/jquery.min.js"></script>
+<link rel="stylesheet" href="css/bootstrap.min.css"/>
+<link rel="stylesheet" href="css/myPRL.css"/>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/sortarray.js"></script>
+<script src="js/amcharts/amcharts.js"></script>
+<script src="js/amcharts/radar.js"></script>
+<script src="js/jquery.lazyload.min.js"></script>
+<!--libs-->
+</head>
+
+<header>
+<!--导航条从这里开始-->
+<nav class="navbar navbar-default .navbar-fixed-top">
+  <div class="container-fluid"><!--设置响应式栅格-->
+    <div class="navbar-header">
+	<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">&nbsp;&nbsp;◇◆Project MyPRL◆◇&nbsp;&nbsp;</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="home.html">&nbsp;&nbsp;首页&nbsp;&nbsp; </a></li>
+        <li><a href="systemIntro.html"> 系统简介 </a></li>
+		<li><a href="dataBooking.html"> 数据预约 </a></li>
+        <li><a href="analysis.html"> 评论管理 </a></li>
+		<li><a href="author.html"> 关于作者 </a></li>
+      </ul>
+	
+      <form class="navbar-form navbar-right">
+		<div class="form-group">
+			<label for="search_keywords">按商品关键字搜索&nbsp;&nbsp;</label>
+			<input type="text" class="form-control" id="search_keywords" placeholder="关键字之间用空格隔开">
+		</div>
+        <button type="button" id="query_kw_b" class="btn btn-default">搜索</button>
+      </form>
+	  
+    </div><!-- /.navbar-collapse 响应式，在手机页面会缩起来-->
+  </div><!-- /.container-fluid 响应式栅格，到此结束-->
+</nav>
+<!--导航条在这里结束 navbar ends here-->
+
+</header>
+
+<body> <!--首页正文 main body-->
+
+
+<div class="container-fluid" id="app1" v-if="a1" >
+	<div><p v-if="loading"><img src='img/loading.gif'/></p></div>
+	<!--选择-->
+	<div class='row panel panel-default' v-if="show">
+		<div class="col-xs-6 panel-body" style="max-height:500px;overflow-y:auto">
+			<div>请选择需要映射的市场关注点/产品特征</div>
+			<div v-for="t in topics">
+				<input type="checkbox" v-model="t.map" onchange="updateChosenT()"/>{{t.topicID}}>&nbsp;&nbsp;为它起个名字：<input v-if="!t.map" type="text" v-model="t.name"/>
+				<p>{{getAllTerms(t.terms)}}</p>
+			</div>
+		</div>
+		
+		<div class="col-xs-6 panel-body">
+			<div>如果将市场关注点/产品特征映射至需求，请添加或选择需求</div>
+				<div id="demands">
+					<div v-for="d in demands">
+						填写需求名称：
+						<select  v-model="d.name">
+							<option v-for="f in allD" v-bind:value="f">{{f}}</option>		
+						</select>
+						<input type="button" class="button" value="删除" v-bind:onclick="'delDemand(\''+d.name+'\')'"/>
+					</div>
+					<button class="button" onclick="newDemand()">+</button>
+					<div>如果选项中没有需要的，请在此添加：<input type="text" v-model="addDemand"/>
+						<button class="button" onclick="addDemand()">添加</button>
+					</div>
+				</div>
+			<button class="button" onclick="refreshMatrix()">刷新矩阵</button>
+			<table style="text-align:middle" v-if="show">
+				<tr>
+					<th>需求<br/>关注点</th><th v-for="d in demands">{{d.name}}<br/><br/></th>
+				</tr>
+				<tr v-for="(row,i) in map">
+					<td>{{chosenT[i]}}</td>
+					<td v-for="(col,j) in row"><input type="text" v-model="map1[i][j]"/></td>
+				</tr>
+			</table>
+			<button onclick="nextStep()">下一步</button>
+		</div>
+	</div><!--row 1, 第一行-->
+	
+</div><!--container/ main body-->
+
+<div class="container-fluid" id="app2" v-if="a2">
+	<div class='panel panel-default float-top half-screen' v-if="show">
+		<div class="panel-body">
+			<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#userInput">
+  				进一步分析
+  			</button>
+			<div class="collapse pre-scrollable" id="userInput" style="max-height:480px" >
+  				<div style="height:95%" v-if="sortMode">
+  					<button onclick="changeMode()">切换到统计功能</button>
+  					<div>距离搜索，请在表格中输入您商品的预计分数</div>
+  					<div>
+  						<select v-model="sortType">
+  							<option value="geo">几何距离</option>
+  							<option value="cos">余弦距离</option>
+  						</select>
+  						<table>
+  							<tr><th>方面/情感</th><th>&nbsp;积极情感</th><th>&nbsp;消极情感</th></tr>
+  							<tr v-for="d in userProduct">
+  								<td>{{d.topicID}}</td>
+  								<td><input type="text" v-model="d.good"/></td>
+  								<td><input type="text" v-model="d.bad"/></td>
+  							</tr>
+  						</table>
+  						<button onclick="sortByDistance()">按距离排序</button>
+  					</div>
+  				</div>
+  				
+  				<div style="height:95%" v-if="!sortMode">
+  					<button onclick="changeMode()">切换到距离搜索功能</button>
+  					<div>统计模块</div>
+  					<div>
+  						<table>
+  							<tr>
+  								<th>方面/相关系数/情感</th><th>&nbsp;&nbsp;积极</th><th>&nbsp;&nbsp;消极</th>
+  							</tr>
+  							<tr v-for="r in pearsonR">
+  								<td>{{r.name}}</td><td>&nbsp;{{r.g}}</td><td>&nbsp;{{r.b}}</td>
+  							</tr>
+  						</table>
+  						
+  						<hr/>
+  						<button onclick="stepWise()">逐步回归（测试版）</button>
+  					</div>
+  				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class='row panel panel-default' v-if="showPro"><!-- 第一行 -->
+		<div class="col-xs-6 panel-body" id="container" style="max-height:500px;overflow-y:auto">
+			<div v-for="(p,i) in products">
+				<a v-bind:href="'https://item.taobao.com/item.htm?&id='+p.productID" target="_blank"><p>
+				<img class="response-img lazy" v-bind:data-original="imgBase1+(Math.ceil(Math.random()*3)+1)+imgBase2+p.filename" src="img/loading.gif"/></p>
+				<p>{{p.title}}</p></a>
+				<p>价格： {{p.price}}元&nbsp;&nbsp;销量：{{p.sales}}&nbsp;&nbsp;页面位置：{{p.page}}</p>
+				<button v-bind:onclick="'updateRadar('+i+')'">多维打分 →</button>	
+			<hr/>
+			</div>
+		</div>
+		<div class="col-xs-6 panel-body">
+		 <div id="chartdiv" style="width:100%; min-height:400px;"></div>
+		</div>
+	</div><!-- 第一行结束 -->
+	
+	<div class='row panel panel-default' v-if="show"><!-- 第二行 -->
+		
+	</div><!-- 第二行结束 -->
+</div>
+
+<!-- self-defined -->
+<script src="js/step2.js"></script>
+<!-- self-defined -->
+</body>
+</html>

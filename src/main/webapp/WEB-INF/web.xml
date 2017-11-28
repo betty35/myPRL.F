@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		 xmlns="http://java.sun.com/xml/ns/javaee" 
+		 xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+		 http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" 
+		 id="WebApp_ID" version="3.0">
+
+  <display-name>myPRL-F</display-name>
+  <welcome-file-list>
+    <welcome-file>home.html</welcome-file>
+  </welcome-file-list>
+  
+   <servlet>
+    <description>Test Servlet</description>
+    <display-name>Test</display-name>
+    <servlet-name>Test</servlet-name>
+    <servlet-class>myPRL.F.Servlet.TestServlet</servlet-class>
+  </servlet>
+   <servlet-mapping>
+    <servlet-name>Test</servlet-name>
+    <url-pattern>/Test</url-pattern>
+  </servlet-mapping>
+  
+  
+  <servlet>
+    <description>Find Product Basic Servlet</description>
+    <display-name>ProductBasic</display-name>
+    <servlet-name>ProductBasic</servlet-name>
+    <servlet-class>myPRL.F.Servlet.ProductBasic</servlet-class>
+  </servlet>
+   <servlet-mapping>
+    <servlet-name>ProductBasic</servlet-name>
+    <url-pattern>/ProductBasic</url-pattern>
+  </servlet-mapping>
+  
+  
+  <servlet>
+    <description>Find LDA Topics with keywords, and return a JSON</description>
+    <display-name>LDATopicSearch</display-name>
+    <servlet-name>LDATopicSearch</servlet-name>
+    <servlet-class>myPRL.F.Servlet.LDATopicSearch</servlet-class>
+  </servlet>
+   <servlet-mapping>
+    <servlet-name>LDATopicSearch</servlet-name>
+    <url-pattern>/getTopics</url-pattern>
+  </servlet-mapping>
+  
+  
+  
+  <servlet>
+    <description>Find LDA Topics by IDs, and return a JSON</description>
+    <display-name>GetTopics</display-name>
+    <servlet-name>GetTopics</servlet-name>
+    <servlet-class>myPRL.F.Servlet.GetTopics</servlet-class>
+  </servlet>
+   <servlet-mapping>
+    <servlet-name>GetTopics</servlet-name>
+    <url-pattern>/topics</url-pattern>
+  </servlet-mapping>
+  
+  <servlet>
+    <description>Get product details in Json</description>
+    <display-name>ProductDetail</display-name>
+    <servlet-name>ProductDetail</servlet-name>
+    <servlet-class>myPRL.F.Servlet.ProductDetails</servlet-class>
+  </servlet>
+   <servlet-mapping>
+    <servlet-name>ProductDetail</servlet-name>
+    <url-pattern>/ProductDetail</url-pattern>
+  </servlet-mapping>
+  
+  <servlet>
+    <description>Update Topics</description>
+    <display-name>UpdateTopic</display-name>
+    <servlet-name>UpdateTopic</servlet-name>
+    <servlet-class>myPRL.F.Servlet.LDATopicUpdate</servlet-class>
+  </servlet>
+   <servlet-mapping>
+    <servlet-name>UpdateTopic</servlet-name>
+    <url-pattern>/UpdateTopic</url-pattern>
+  </servlet-mapping>
+  
+  
+  <servlet>
+    <description>Mapping to Demands</description>
+    <display-name>GetDemands</display-name>
+    <servlet-name>GetDemands</servlet-name>
+    <servlet-class>myPRL.F.Servlet.GetDemands</servlet-class>
+  </servlet>
+   <servlet-mapping>
+    <servlet-name>GetDemands</servlet-name>
+    <url-pattern>/demands</url-pattern>
+  </servlet-mapping>
+  
+  <servlet>
+    <description>MultiScore Related</description>
+    <display-name>ProductMultiScore</display-name>
+    <servlet-name>ProductMultiScore</servlet-name>
+    <servlet-class>myPRL.F.Servlet.ProductMultiScore</servlet-class>
+  </servlet>
+   <servlet-mapping>
+    <servlet-name>ProductMultiScore</servlet-name>
+    <url-pattern>/multi</url-pattern>
+  </servlet-mapping>
+  
+  <servlet>
+  	<description>Stepwise Regression</description>
+  	<display-name>Stepwise</display-name>
+    <servlet-name>Stepwise</servlet-name>
+    <servlet-class>myPRL.F.Servlet.MathServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Stepwise</servlet-name>
+    <url-pattern>/stepwise</url-pattern>
+  </servlet-mapping>
+  
+</web-app>
